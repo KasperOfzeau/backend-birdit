@@ -1,10 +1,12 @@
-var express = require('express')
-var multer  = require('multer')
-var port = 3000;
+/* http://localhost:3000/ */
 
-var app = express()
+const express = require('express')
+const multer  = require('multer')
+const port = 3000;
 
-var storage = multer.diskStorage({
+const app = express()
+
+let storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, './uploads')
     },
@@ -12,24 +14,32 @@ var storage = multer.diskStorage({
       cb(null, file.originalname)
     }
 })
-var upload = multer({ storage: storage })
+let upload = multer({ storage: storage })
 
-/*
-app.use('/a',express.static('/b'));
-Above line would serve all files/folders inside of the 'b' directory
-And make them accessible through http://localhost:3000/a.
-*/
+//Add headers before the routes are defined
+app.use('/', function (req, res, next) {
+  // Website(s) to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Request methods to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  // Request headers to allow
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  // Pass to next layer
+  next();
+});
+
 app.use(express.static(__dirname + '/public'));
 app.use('/uploads', express.static('uploads'));
 
-app.post('/profile-upload-single', upload.single('profile-file'), function (req, res, next) {
-  // req.file is the `profile-file` file
-  // req.body will hold the text fields, if there were any
+app.get('/uploads/:fileid', (req, res) => {
+  const { fileid } = req.params;
+  res.sendFile(__dirname + /uploads/ + fileid); 
+});
+
+app.post('/image', upload.single('image'), function (req, res, next) {
   console.log(JSON.stringify(req.file))
 
-  var response = '<a href="/">Home</a><br>'
-  response += "Files uploaded successfully.<br>"
-  response += `<img src="${req.file.path}" /><br>`
+  let response = "Files uploaded successfully.";
   return res.send(response)
 })
 
